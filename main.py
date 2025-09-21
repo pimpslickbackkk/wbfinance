@@ -24,6 +24,9 @@ def main():
     # Short
     short = parse_raw(src, pars_cols)
 
+    #checkpoint
+    print("Колонки в short:", list(short.columns))
+
     # Grouped
     grouped = prepare_grouped(short, book)
 
