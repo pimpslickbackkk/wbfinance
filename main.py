@@ -23,13 +23,21 @@ def main():
     # Grouped (с группами и сортировкой)
     grouped = add_group_and_sort(short.copy(), book)
 
+    # Логистика Полный Отчет (фильтр по колонке Обоснование для оплаты)
+    if "Обоснование для оплаты" in original.columns:
+        logistics = original[original["Обоснование для оплаты"] == "Логистика"].copy()
+    else:
+        logistics = pd.DataFrame()
+
     out_file = final_dir / "final_report.xlsx"
     with pd.ExcelWriter(out_file, engine="openpyxl") as writer:
         original.to_excel(writer, sheet_name="Оригинальный отчет", index=False)
         short.to_excel(writer, sheet_name="Short", index=False)
         grouped.to_excel(writer, sheet_name="Grouped", index=False)
+        logistics.to_excel(writer, sheet_name="Логистика Полный Отчет", index=False)
 
     print("✅ Отчёт сохранён в", out_file)
+
 
 
 if __name__ == "__main__":
