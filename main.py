@@ -1,6 +1,10 @@
 from pathlib import Path
 import pandas as pd
-from report_utils import load_pars, load_book, parse_raw, add_group_and_sort
+from report_utils import (
+    load_pars, load_book,
+    parse_raw, prepare_grouped, prepare_logistics
+)
+
 
 def main():
     root = Path(__file__).parent
@@ -10,34 +14,31 @@ def main():
     pars_cols = load_pars(root)
     book = load_book(root)
 
-    # Оригинальный отчёт (все данные как есть)
+    # Оригинальный отчёт
     pre_files = sorted((root / "pre").glob("*.xlsx"))
     if not pre_files:
         raise FileNotFoundError("Нет файлов в папке pre/")
     src = pre_files[0]
     original = pd.read_excel(src)
 
-    # Short (только нужные колонки из pars.yaml)
-    short = original[[c for c in pars_cols if c in original.columns]].copy()
+    # Short
+    short = parse_raw(src, pars_cols)
 
-    # Grouped (с группами и сортировкой)
-    grouped = add_group_and_sort(short.copy(), book)
+    # Grouped
+    grouped = prepare_grouped(short, book)
 
-    # Логистика Полный Отчет (фильтр по колонке Обоснование для оплаты)
-    if "Обоснование для оплаты" in original.columns:
-        logistics = original[original["Обоснование для оплаты"] == "Логистика"].copy()
-    else:
-        logistics = pd.DataFrame()
+    # Логистика
+    logistics = prepare_logistics(original, book)
 
+    # Запись в Excel
     out_file = final_dir / "final_report.xlsx"
     with pd.ExcelWriter(out_file, engine="openpyxl") as writer:
         original.to_excel(writer, sheet_name="Оригинальный отчет", index=False)
         short.to_excel(writer, sheet_name="Short", index=False)
         grouped.to_excel(writer, sheet_name="Grouped", index=False)
-        logistics.to_excel(writer, sheet_name="Логистика Полный Отчет", index=False)
+        logistics.to_excel(writer, sheet_name="Логистика", index=False)
 
     print("✅ Отчёт сохранён в", out_file)
-
 
 
 if __name__ == "__main__":
